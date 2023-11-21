@@ -1,5 +1,3 @@
-# CS4065 Final Project: client
-
 import socket
 import threading
 

@@ -1,5 +1,3 @@
-# CS4065 Final Project: server
-
 import socket
 import threading
 import time
