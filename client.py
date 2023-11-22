@@ -25,7 +25,6 @@ def send_messages():
             break
 
 if __name__ == "__main__":
-
     host = 'localhost'
     port = 6789
     client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)

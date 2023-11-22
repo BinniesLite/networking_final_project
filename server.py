@@ -10,11 +10,19 @@ def handle_client(client):
     while True:
         try:
             message = client.recv(1024).decode('utf-8')
+            
             if message:
                 command = message.split(' ')[0]
-            
+            temp = []
+            message = message.split(' ')
+            for msg in message[1:]:
+                if msg != "":
+                    temp.append(msg)
+
+            message = [command] + temp
             if command == '%join':
-                username = message.split(' ')[1]
+                username = message[1]
+                print(username)
                 if username in usernames.values():
                     client.send('Username already exists. Choose another.\n'.encode('utf-8'))
                 else:
@@ -28,7 +36,7 @@ def handle_client(client):
                     client.send(f"Users in the group:\n{user_list}\n".encode('utf-8'))
             
             elif command == '%connect':
-                address_port = message.split(' ')[1:]
+                address_port = message[1:]
                 if len(address_port) == 2:
                     try:
                         new_host = address_port[0]
@@ -43,7 +51,7 @@ def handle_client(client):
                     client.send('Invalid command format. Use "%connect [address] [port]\n".'.encode('utf-8'))
             
             elif command == '%post':
-                subject = " ".join(message.split(' ')[1:])
+                subject = " ".join(message[1:])
                 sender = usernames[client]
                 
                 # Get current timestamp
@@ -66,7 +74,7 @@ def handle_client(client):
                 client.send("You left the chat room!\n".encode('utf-8'))
 
             elif command == '%message':
-                msg_id = int(message.split(' ')[1])
+                msg_id = int(message[1])
                 if 1 <= msg_id <= len(messages):
                     client.send(messages[msg_id - 1].encode('utf-8'))
                 else:
@@ -74,13 +82,15 @@ def handle_client(client):
                 
             elif command == '%exit':
                 username = usernames[client]
+                
                 del usernames[client]
                 clients.remove(client)
+                
                 broadcast(f'{username} has left the chat room!\n'.encode('utf-8'))
                 client.send("You are disconnected from the server!\n".encode('utf-8'))
                 client.close()
-                break
                 
+                break
             else:
                 client.send('Invalid command format. Try again!\n'.encode('utf-8'))
                 
@@ -90,9 +100,13 @@ def handle_client(client):
 def run_server():
     print("Server started. Waiting for connections...")
     while True:
+        
         client, address = server.accept()
+        
         clients.append(client)
+        
         print(f'Connection established with {address}')
+        
         client.send("""Welcome to the chat room!
         Available commands:
         %connect [address] [port]: Connect to a different server
@@ -115,7 +129,7 @@ if __name__ == "__main__":
     server.bind((host, port))
     server.listen()
     
-    clients = []
+    clients: list[type(socket)] = []
     usernames = {}
     messages = []
     
