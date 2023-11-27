@@ -14,18 +14,20 @@ def handle_client(client):
     while True:
         try:
             message = client.recv(1024).decode('utf-8')
-            
             if message:
+                # remove everything before the % character
+                tokens = message.split("%", 1)
+                message = "%" + tokens[1]         
+
                 command = message.split(' ')[0]
             
                 temp = []
-           
+
                 # Handle empty string
                 message = message.split(' ')
                 for msg in message[1:]:
                     if msg != "":
                         temp.append(msg)
-
                 message = [command] + temp
             # response = ""
             if command == '%join':
@@ -57,7 +59,7 @@ def handle_client(client):
                 else:
                     client.send('Invalid command format. Use "%connect [address] [port]\n".'.encode('utf-8'))
             
-            elif command == '%post':
+            elif command == "%post":
                 subject = message[1]
                 content = " ".join(message[2:])
                 

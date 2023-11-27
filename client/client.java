@@ -2,9 +2,6 @@ package client;
 
 import java.io.*;
 import java.net.*;
-//import java.util.*;
-//import java.util.regex.Matcher;
-//import java.util.regex.Pattern;
 
 /* main client class */
 public final class client {
@@ -95,7 +92,7 @@ public final class client {
                     String command = userInputReader.readLine();
                     if ((command != null) && (command != "")) {
                         // send command to the server
-                        controlWriter.writeBytes(command);
+                        controlWriter.writeUTF(command);
                     }
                 }
                 catch (IOException ex) {
@@ -127,13 +124,17 @@ public final class client {
         }
 
         public void rcvMsg() {
-            String currentResponse = "";
-            try {
-                currentResponse = controlReader.readLine();
-                System.out.println(currentResponse);
-            } 
-            catch (Exception e) {
-                System.out.println("Exception occurred in receive message attempt: " + e);
+            while (true) {
+                String currentResponse = "";
+                try {
+                    currentResponse = controlReader.readLine();
+                    if (currentResponse != null) {
+                        System.out.println(currentResponse);
+                    }
+                } 
+                catch (Exception e) {
+                    System.out.println("Exception occurred in receive message attempt: " + e);
+                }
             }
 
         } /* end rcvMsg() */
