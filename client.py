@@ -18,9 +18,13 @@ def send_messages():
             
             # Send commands to the server
             client.send(command.encode('utf-8'))
-            
+            msg = client.recv(1024).decode('utf-8')
+            if msg[0] == "exit":
+                print("Exiting the group chat")
+                client.close()
+                break
         except:
-            print('An error occurred!')
+            print('Exiting the group chat')
             client.close()
             break
 

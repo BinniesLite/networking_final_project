@@ -30,7 +30,7 @@ def handle_client(client):
             # response = ""
             if command == '%join':
                 username = message[1]
-                print(username)
+
                 if username in usernames.values():
                     client.send('Username already exists. Choose another.\n'.encode('utf-8'))
                 else:
@@ -81,7 +81,7 @@ def handle_client(client):
                 clients.remove(client)
                 broadcast(f'{username} has left the chat room!\n'.encode('utf-8'))
                 client.send("You left the chat room!\n".encode('utf-8'))
-
+                client.close()
             elif command == '%message':
                 msg_id = int(message[1])
                 
@@ -98,9 +98,8 @@ def handle_client(client):
                     del usernames[client]
                 
                 client.send("You are disconnected from the server!\n".encode('utf-8'))
-                
+                client.send("exit".encode("utf-8"))
                 client.close()
-                break
             elif command == "%groups":
                 response = f"Here're all the group available: \n {' '.join([str(i) for i in range(GROUPS)])}" 
                 
@@ -148,7 +147,10 @@ def handle_client(client):
                     client.send('Invalid command format. Try again!\n'.encode('utf-8'))
                     continue  
                 
-                
+                if not message[1].isnumeric():
+                    client.send('Invalid command format. Try again!\n'.encode('utf-8'))
+                    continue  
+                    
                 group_id = int(message[1]) 
                 subject = message[2]
                 content = " ".join(message[3:])
@@ -206,7 +208,7 @@ def handle_client(client):
         except Exception as e:
             print(e)
             print("There is something wrong")
-            continue
+            break
         
 def run_server():
     print("Server started. Waiting for connections...")
