@@ -8,6 +8,7 @@ import com.googlecode.lanterna.terminal.*;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.regex.Pattern;
 //import java.util.regex.Pattern;
 
 public class GUI {
@@ -44,60 +45,175 @@ public class GUI {
         userLabelPanel.addComponent((new Label("User: ")));
         userLabelPanel.addComponent((new Label("Groups: ")));
         userLabelPanel.addComponent((new Label("Status: ")));
-        //mainPanel.addComponent(1, userLabelPanel.withBorder(Borders.singleLine("Client Info")));
 
+        // create panel to hold table with send command options
+        Panel sendCmdPanel = new Panel();
+        sendCmdPanel.setLayoutManager(new GridLayout(1));
 
-        // create panel to hold table with server commands/descriptions
-        Panel cmdInfoPanel = new Panel();
-        cmdInfoPanel.setLayoutManager(new GridLayout(1));
+        // create two subpanels for the send commands panel: one for regular, one for group commands
+        Panel regCmds = new Panel();
+        regCmds.setLayoutManager(new GridLayout(9));
+        sendCmdPanel.addComponent(regCmds.withBorder(Borders.singleLine("Solo Commands")));
+        Panel groupCmds = new Panel();
+        groupCmds.setLayoutManager(new GridLayout(9));
+        sendCmdPanel.addComponent(groupCmds.withBorder(Borders.singleLine("Group Commands")));
 
-        // create server commands/descriptions table
-        Table<String> cmdInfoTable = new Table<String>("Command", "Description");
-        cmdInfoTable.getTableModel().addRow("%connect [address] [port]: ", "Connect to a different server");
-        cmdInfoTable.getTableModel().addRow("%join [username]: ", "Join the group");
-        cmdInfoTable.getTableModel().addRow("%post [subject] [content]: ", "Post a message");
-        cmdInfoTable.getTableModel().addRow("%users: ", "Get the list of users in the group");
-        cmdInfoTable.getTableModel().addRow("%message [message ID]: ", "Retrieve the content of a message");
-        cmdInfoTable.getTableModel().addRow("%leave: ", "Leave the group");
-        cmdInfoTable.getTableModel().addRow("%exit: ", "Exit the client program");
+        // add %connect [address] [port]: Connect to a different server
+        Label connectLabel = new Label("Connect to a different server: %connect").addTo(regCmds); 
+        final TextBox connectAddr = new TextBox().setValidationPattern(Pattern.compile("[0-9]*")).addTo(regCmds);
+        Label connectAddrLabel = new Label("(address)").addTo(regCmds);
+        final TextBox connectPort = new TextBox().setValidationPattern(Pattern.compile("[0-9]*")).addTo(regCmds);
+        Label connectPortLabel = new Label("(port)").addTo(regCmds);
+        regCmds.addComponent(new EmptySpace(new TerminalSize(1, 1)));
+        regCmds.addComponent(new EmptySpace(new TerminalSize(1, 1)));
+        regCmds.addComponent(new EmptySpace(new TerminalSize(1, 1)));
+        Button sendConnectButton = new Button("SEND").addTo(regCmds);
 
-        // print selection when user chooses a row
-        cmdInfoTable.setSelectAction(new Runnable() {
-            @Override
-            public void run() {
-                List<String> data = cmdInfoTable.getTableModel().getRow(cmdInfoTable.getSelectedRow());
-                for(int i = 0; i < data.size(); i++) {
-                    System.out.println(data.get(i));
-                }
-            }
-        });
+        // add %join [username]: Join with the username
+        Label joinLabel = new Label("Join with the username: %join").addTo(regCmds); 
+        final TextBox userName = new TextBox().setValidationPattern(Pattern.compile("[a-z]*")).addTo(regCmds);
+        Label usernameLabel = new Label("(username)").addTo(regCmds);
+        regCmds.addComponent(new EmptySpace(new TerminalSize(1, 1)));
+        regCmds.addComponent(new EmptySpace(new TerminalSize(1, 1)));
+        regCmds.addComponent(new EmptySpace(new TerminalSize(1, 1)));
+        regCmds.addComponent(new EmptySpace(new TerminalSize(1, 1)));
+        regCmds.addComponent(new EmptySpace(new TerminalSize(1, 1)));
+        Button joinButton = new Button("SEND").addTo(regCmds);
 
-        // add cmdInfoTable, label, and spacing to cmdInfoPanel
-        cmdInfoPanel.addComponent(cmdInfoTable.withBorder(Borders.singleLine("Client Commands")));
-        cmdInfoPanel.addComponent(new EmptySpace(new TerminalSize(0, 0)));
+        // add %post [subject] [content]: Post a message
+        Label postLabel = new Label("Post a message: %post").addTo(regCmds); 
+        final TextBox subject = new TextBox().setValidationPattern(Pattern.compile("[a-z]*")).addTo(regCmds);
+        Label subjectLabel = new Label("(subject)").addTo(regCmds);
+        final TextBox content = new TextBox().setValidationPattern(Pattern.compile("[a-z]*")).addTo(regCmds);
+        Label contentLabel = new Label("(content)").addTo(regCmds);
+        regCmds.addComponent(new EmptySpace(new TerminalSize(1, 1)));
+        regCmds.addComponent(new EmptySpace(new TerminalSize(1, 1)));
+        regCmds.addComponent(new EmptySpace(new TerminalSize(1, 1)));
+        Button postButton = new Button("SEND").addTo(regCmds);
 
-        // create panel to hold table with test info
-        Panel testPanel = new Panel();
-        testPanel.setLayoutManager(new GridLayout(1));
+        // add %users: Get the list of users in the group
+        Label usersLabel = new Label("Get the list of users in the group: %users").addTo(regCmds); 
+        regCmds.addComponent(new EmptySpace(new TerminalSize(1, 1)));
+        regCmds.addComponent(new EmptySpace(new TerminalSize(1, 1)));
+        regCmds.addComponent(new EmptySpace(new TerminalSize(1, 1)));
+        regCmds.addComponent(new EmptySpace(new TerminalSize(1, 1)));
+        regCmds.addComponent(new EmptySpace(new TerminalSize(1, 1)));
+        regCmds.addComponent(new EmptySpace(new TerminalSize(1, 1)));
+        regCmds.addComponent(new EmptySpace(new TerminalSize(1, 1)));
+        Button usersButton = new Button("SEND").addTo(regCmds);
 
-        // create test table
-        Table<String> testTable = new Table<String>("test col1", "test col2");
-        testTable.getTableModel().addRow("%connect [address] [port]: ", "Connect to a different server");
-        testTable.getTableModel().addRow("%join [username]: ", "Join the group");
-        testTable.getTableModel().addRow("%post [subject] [content]: ", "Post a message");
+        // add %message [message ID]: Retrieve the content of a message
+        Label messageLabel = new Label("Retrieve the content of a message: %message").addTo(regCmds); 
+        final TextBox message = new TextBox().setValidationPattern(Pattern.compile("[0-9]*")).addTo(regCmds);
+        Label messageIdLabel = new Label("(message ID)").addTo(regCmds);
+        regCmds.addComponent(new EmptySpace(new TerminalSize(1, 1)));
+        regCmds.addComponent(new EmptySpace(new TerminalSize(1, 1)));
+        regCmds.addComponent(new EmptySpace(new TerminalSize(1, 1)));
+        regCmds.addComponent(new EmptySpace(new TerminalSize(1, 1)));
+        regCmds.addComponent(new EmptySpace(new TerminalSize(1, 1)));
+        Button messageButton = new Button("SEND").addTo(regCmds);
 
-        // add testTable, label, and spacing to testPanel
-        testPanel.addComponent(testTable.withBorder(Borders.singleLine("Test panel")));
-        testPanel.addComponent(new EmptySpace(new TerminalSize(0, 0)));
+        // add %leave: Leave the group
+        Label leaveLabel = new Label("Leave the group: %leave").addTo(regCmds); 
+        regCmds.addComponent(new EmptySpace(new TerminalSize(1, 1)));
+        regCmds.addComponent(new EmptySpace(new TerminalSize(1, 1)));
+        regCmds.addComponent(new EmptySpace(new TerminalSize(1, 1)));
+        regCmds.addComponent(new EmptySpace(new TerminalSize(1, 1)));
+        regCmds.addComponent(new EmptySpace(new TerminalSize(1, 1)));
+        regCmds.addComponent(new EmptySpace(new TerminalSize(1, 1)));
+        regCmds.addComponent(new EmptySpace(new TerminalSize(1, 1)));
+        Button leaveButton = new Button("SEND").addTo(regCmds);
+
+        // add %exit: Exit the client program
+        Label exitLabel = new Label("Exit the client program: %exit").addTo(regCmds); 
+        regCmds.addComponent(new EmptySpace(new TerminalSize(1, 1)));
+        regCmds.addComponent(new EmptySpace(new TerminalSize(1, 1)));
+        regCmds.addComponent(new EmptySpace(new TerminalSize(1, 1)));
+        regCmds.addComponent(new EmptySpace(new TerminalSize(1, 1)));
+        regCmds.addComponent(new EmptySpace(new TerminalSize(1, 1)));
+        regCmds.addComponent(new EmptySpace(new TerminalSize(1, 1)));
+        regCmds.addComponent(new EmptySpace(new TerminalSize(1, 1)));
+        Button exitButton = new Button("SEND").addTo(regCmds);
+
+        // add %groups: Show all groups available
+        Label groupsLabel = new Label("Show all groups availables: %groups").addTo(groupCmds); 
+        groupCmds.addComponent(new EmptySpace(new TerminalSize(1, 1)));
+        groupCmds.addComponent(new EmptySpace(new TerminalSize(1, 1)));
+        groupCmds.addComponent(new EmptySpace(new TerminalSize(1, 1)));
+        groupCmds.addComponent(new EmptySpace(new TerminalSize(1, 1)));
+        groupCmds.addComponent(new EmptySpace(new TerminalSize(1, 1)));
+        groupCmds.addComponent(new EmptySpace(new TerminalSize(1, 1)));
+        groupCmds.addComponent(new EmptySpace(new TerminalSize(1, 1)));
+        Button groupsButton = new Button("SEND").addTo(groupCmds);
+
+        // add %groupsjoin [group ID]: Join the group with ID
+        Label groupsjoinLabel = new Label("Join the group with id: %groupsjoin").addTo(groupCmds); 
+        final TextBox groupsjoinIdTextbox = new TextBox().setValidationPattern(Pattern.compile("[0-9]*")).addTo(groupCmds);
+        Label groupIdLabel = new Label("(group ID)").addTo(groupCmds);
+        groupCmds.addComponent(new EmptySpace(new TerminalSize(1, 1)));
+        groupCmds.addComponent(new EmptySpace(new TerminalSize(1, 1)));
+        groupCmds.addComponent(new EmptySpace(new TerminalSize(1, 1)));
+        groupCmds.addComponent(new EmptySpace(new TerminalSize(1, 1)));
+        groupCmds.addComponent(new EmptySpace(new TerminalSize(1, 1)));
+        Button groupsjoinButton = new Button("SEND").addTo(groupCmds);
+
+        // add %grouppost [group ID] [subject] [content]: Post to the group with that id
+        Label groupPostLabel = new Label("Post to the group with ID: %grouppost").addTo(groupCmds); 
+        final TextBox grouppostIdTextbox = new TextBox().setValidationPattern(Pattern.compile("[0-9]*")).addTo(groupCmds);
+        Label grouppostIdLabel = new Label("(group ID)").addTo(groupCmds);
+        final TextBox grouppostSubjectTextbox = new TextBox().setValidationPattern(Pattern.compile("[a-z],[0-9]*")).addTo(groupCmds);
+        Label grouppostSubjectLabel = new Label("(subject)").addTo(groupCmds);
+        final TextBox grouppostContentTextbox = new TextBox().setValidationPattern(Pattern.compile("[a-z],[0-9]*")).addTo(groupCmds);
+        Label grouppostContentLabel = new Label("(content)").addTo(groupCmds);
+        groupCmds.addComponent(new EmptySpace(new TerminalSize(1, 1)));
+        Button grouppostButton = new Button("SEND").addTo(groupCmds);
+
+        // add %groupusers [group ID]: Retrieve a list of users in the given group
+        Label groupusersLabel = new Label("Retrieve list of users in group with ID: %groupusers").addTo(groupCmds); 
+        final TextBox groupusersIdTextbox = new TextBox().setValidationPattern(Pattern.compile("[0-9]*")).addTo(groupCmds);
+        Label groupusersIdLabel = new Label("(group ID)").addTo(groupCmds);
+        groupCmds.addComponent(new EmptySpace(new TerminalSize(1, 1)));
+        groupCmds.addComponent(new EmptySpace(new TerminalSize(1, 1)));
+        groupCmds.addComponent(new EmptySpace(new TerminalSize(1, 1)));
+        groupCmds.addComponent(new EmptySpace(new TerminalSize(1, 1)));
+        groupCmds.addComponent(new EmptySpace(new TerminalSize(1, 1)));
+        Button groupusersButton = new Button("SEND").addTo(groupCmds);
+
+        // add %groupmessage [group ID] [message ID]: retrieve the content of an earlier post if you belong to that group
+        Label groupmsgLabel = new Label("Retrieve content of an earlier post if you belong to that group: %groupmessage").addTo(groupCmds); 
+        final TextBox groupmsgGroupIdTextbox = new TextBox().setValidationPattern(Pattern.compile("[0-9]*")).addTo(groupCmds);
+        Label groupmsgGroupIdLabel = new Label("(group ID)").addTo(groupCmds);
+        final TextBox groupmsgMsgIdTextbox = new TextBox().setValidationPattern(Pattern.compile("[a-z],[0-9]*")).addTo(groupCmds);
+        Label groupmsgMsgIdLabel = new Label("(message ID)").addTo(groupCmds);
+        groupCmds.addComponent(new EmptySpace(new TerminalSize(1, 1)));
+        groupCmds.addComponent(new EmptySpace(new TerminalSize(1, 1)));
+        groupCmds.addComponent(new EmptySpace(new TerminalSize(1, 1)));
+        Button groupmsgButton = new Button("SEND").addTo(groupCmds);
+
+        // add %groupleave [group ID]: Leave the current group if client is in that group
+        Label groupleaveLabel = new Label("Leave the current group if client is in that group: %groupleave").addTo(groupCmds); 
+        final TextBox groupleaveIdTextbox = new TextBox().setValidationPattern(Pattern.compile("[0-9]*")).addTo(groupCmds);
+        Label groupleaveIdLabel = new Label("(group ID)").addTo(groupCmds);
+        groupCmds.addComponent(new EmptySpace(new TerminalSize(1, 1)));
+        groupCmds.addComponent(new EmptySpace(new TerminalSize(1, 1)));
+        groupCmds.addComponent(new EmptySpace(new TerminalSize(1, 1)));
+        groupCmds.addComponent(new EmptySpace(new TerminalSize(1, 1)));
+        groupCmds.addComponent(new EmptySpace(new TerminalSize(1, 1)));
+        Button groupleaveButton = new Button("SEND").addTo(groupCmds);
+
+        // create panel to display output to client
+        Panel outputPanel = new Panel();
+        outputPanel.setLayoutManager(new GridLayout(1));
+        // add display box to output panel
 
         // add logo art label to main panel
         mainPanel.addComponent(0, logoLabel);
         // add user info panel to main panel
         mainPanel.addComponent(1, userLabelPanel.withBorder(Borders.singleLine("Client Info")));
-        // add command info panel to main panel
-        mainPanel.addComponent(2, cmdInfoPanel);
-        // add test panel to main panel
-        mainPanel.addComponent(3, testPanel);
+        // add send commands panel to main panel
+        mainPanel.addComponent(2, sendCmdPanel.withBorder(Borders.singleLine("Send Commands")));
+        // add output panel to main panel
+        mainPanel.addComponent(3, outputPanel.withBorder(Borders.singleLine("Output")));
 
         // create window to hold the main panel
         BasicWindow window = new BasicWindow();
