@@ -14,7 +14,11 @@ The current version of the message board is written entirely in Python. It can b
 * Open new terminal
 * Start a client: `python client.py`
 
-# Part 1: A Public Message Board
+# Major Issues
+There were no major issues with the full Python implementation of this project. However, we ran into a few issues with threading and data processing when trying to implement the GUI and the client in Java. We were able to create the full visual implementation of the GUI using an open-source Java library called Lanterna, but unfortunately ran out of time to fully integrate it into the project. If curious, the work we contributed to this effort can be found on the `develop` branch. The `networking_final_project\GUI` directory contains all of the files necessary to run the GUI in VS Code or in JetBrains IDEA Ultimate. If using VS Code, ensure that the Gradle for Java extension is installed. In both VS Code and IDEA, be sure to open a new project from the `\networking_final_project\GUI` folder. The project can be started from the terminal by running `.\gradlew.bat run`. The Java client attempt can also be found in `networking_final_project\GUI\src\main\java\org\example`.
+
+# Directions
+## Part 1: A Public Message Board
 Consider that all clients belong to one and only one public group. A client joins by connecting to a dedicated server (a standalone process) and is prompted to enter a non-existent user name in that group.
 
 ### Requirements
@@ -28,7 +32,7 @@ Consider that all clients belong to one and only one public group. A client join
 * A user can retrieve the content of a message by contacting the server and providing the message ID as a parameter.
 * Your client program should also provide the option to leave the group. Once a user leaves the group, the server notifies all other users in the same group of this event.
 
-# Part 2: Multiple Private Message Boards
+## Part 2: Multiple Private Message Boards
 Extend Part 1 to allow users to join multiple private groups. 
 
 ### Requirements
@@ -37,7 +41,7 @@ Extend Part 1 to allow users to join multiple private groups.
 * A user can join multiple groups at the same time. 
     * Remember that a user in one group cannot see users in other groups as well as the messages they have posted to their private board in other groups.
 
-# Other Notes
+## Other Notes
 * You are not required to implement any user authentication methods.
 * Additional credit of 5% will be given if you have the client program written in a language different from the one used for the server program.
 * Additional credit up to 5% may be given for a GUI implementation, based on its quality.
