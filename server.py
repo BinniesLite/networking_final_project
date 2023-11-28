@@ -68,7 +68,6 @@ def handle_client(client):
             
             # handle %post command
             elif command == "%post":
-                
                 subject = message[1]
                 content = " ".join(message[2:])
                 
@@ -146,7 +145,7 @@ def handle_client(client):
                 if client in usernames:
                     username = usernames[client]
                 
-                client.send(f"User {username} join group {group_id}".encode("utf-8"))
+                client.send(f"User {username} joined group {group_id}".encode("utf-8"))
 
             # handle %groupusers command
             elif command == "%groupusers":
