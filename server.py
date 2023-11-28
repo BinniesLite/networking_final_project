@@ -65,6 +65,7 @@ def handle_client(client):
                     client.send('Invalid command format. Use "%connect [address] [port]\n".'.encode('utf-8'))
             
             elif command == "%post":
+                
                 subject = message[1]
                 content = " ".join(message[2:])
                 
