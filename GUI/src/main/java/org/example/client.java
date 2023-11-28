@@ -110,6 +110,7 @@ public final class client {
                     if ((command != null) && (command != "")) {
                         // send command to the server
                         controlWriter.writeUTF(command);
+                        response = controlReader.readLine();
                     }
                     if (command == "%exit") {
                         System.out.println("exiting client program");
@@ -122,7 +123,6 @@ public final class client {
                 if (response != null) {
                    System.out.println(response);
                 }
-                 System.out.println(response);
             }
         } /* end sendMsg() */
 
