@@ -1,6 +1,10 @@
 import socket
 import threading
 import time
+import signal
+
+# Flag to control server loop
+running = True
 
 def broadcast(message):
     for client in clients:
@@ -11,7 +15,8 @@ def broadcast_group(message, group_id):
         client.send(message)
     
 def handle_client(client):
-    while True:
+    global running
+    while running:
         try:
             message = client.recv(1024).decode('utf-8')
             if message:
@@ -78,12 +83,15 @@ def handle_client(client):
                 client.send(f"Users in the group:\n{user_list}\n".encode('utf-8'))
                 
             elif command == '%leave':
-                username = usernames[client]
-                del usernames[client]
+                if client in usernames:
+                    username = usernames[client]
+                    
+                    broadcast(f'{username} has left the chat room!\n'.encode('utf-8'))
+                    del usernames[client]
                 clients.remove(client)
-                broadcast(f'{username} has left the chat room!\n'.encode('utf-8'))
                 client.send("You left the chat room!\n".encode('utf-8'))
-                client.close()
+                client.send("exit".encode("utf-8"))
+                break
             elif command == '%message':
                 msg_id = int(message[1])
                 
@@ -106,7 +114,7 @@ def handle_client(client):
                 response = f"Here're all the group available: \n {' '.join([str(i) for i in range(GROUPS)])}" 
                 
                 client.send(response.encode("utf-8"))
-            elif command == "%groupjoin":
+            elif command == "%groupsjoin":
                 if len(message) < 2:
                     client.send('Invalid command format. Try again!\n'.encode('utf-8'))
                     continue
@@ -125,7 +133,6 @@ def handle_client(client):
                 username = "Jane"
                 if client in usernames:
                     username = usernames[client]
-                
                 
                 client.send(f"User {username} join group {group_id}".encode("utf-8"))
             elif command == "%groupusers":
@@ -211,14 +218,54 @@ def handle_client(client):
             # print(e)
             print("Exception occurred in server: " + e)
             break
-        
+
+# Function to handle SIGINT
+def signal_handler(sig, frame):
+    global running
+    print("\nServer is shutting down...")
+    running = False
+    server.close()
+    for client in clients:
+        client.close()
+    print("Server shutdown complete.")
+
 def run_server():
+    global running
     print("Server started. Waiting for connections...")
-    while True:
-        client, address = server.accept()        
-        clients.append(client)
-        print(f'Connection established with {address}')
-        client.send("""Welcome to the chat room!
+    while running:
+        try:
+            client, address = server.accept()
+            clients.append(client)
+            print(f'Connection established with {address}')
+            client.send(welcome_message.encode('utf-8'))
+            thread = threading.Thread(target=handle_client, args=(client,))
+            thread.start()
+        except OSError:
+            # This exception will be raised when the server socket is closed
+            break
+
+if __name__ == "__main__":
+    host = 'localhost'
+    port = 6789
+    GROUPS = 5
+    
+    server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    server.bind((host, port))
+    server.listen()
+    
+    clients = []  # List to keep track of clients
+    usernames = {}  # client -> username
+    messages = []  # messages
+    group_messages = {}  # group -> messages
+    group_users = {}  # group -> client
+
+    for i in range(GROUPS): 
+        group_users[i] = []
+        group_messages[i] = []
+
+    # Define welcome message outside the loop
+    welcome_message = """
+        Welcome to the chat room!
         Available commands:
         %connect [address] [port]: Connect to a different server
         %join [username]: Join with the username
@@ -235,29 +282,14 @@ def run_server():
         %groupusers [group ID]: Retrieve a list of users in the given group
         %groupmessage [group ID] [message ID]: retrieve the content of an earlier post if you belong to that group
         %groupleave [group ID]: Leave the current group if client is in that group
-        """.encode('utf-8'))
+        """
 
-        thread = threading.Thread(target=handle_client, args=(client,))
-        thread.start()
+    # Register the signal handler
+    signal.signal(signal.SIGINT, signal_handler)
 
-if __name__ == "__main__":    
-    host = 'localhost'
-    port = 6789
-    GROUPS = 5
-    
-    server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    server.bind((host, port))
-    server.listen()
-    
-    
-    clients: list[type(socket)] = []
-    usernames = {} # client -> username
-    messages = [] # messages
-    group_messages = {} # group -> messages
-    group_users = {} # group -> client
-    
-    for i in range(GROUPS): 
-        group_users[i] = []
-        group_messages[i] = []
-    
     run_server()
+
+
+
+
+

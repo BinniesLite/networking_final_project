@@ -2,16 +2,21 @@ import socket
 import threading
 
 def receive_messages():
-    while True:
+    global running
+    while running:
         try:
             message = client.recv(1024).decode('utf-8')
+            if message.startswith("exit"):
+                running = False
+                break
             print(message)
         except Exception as e:
             print(f'An error occurred: {e}')
             break
 
 def send_messages():
-    while True:
+    global running
+    while running:
         try:
             command = input()
             client.send(command.encode('utf-8'))
@@ -20,8 +25,19 @@ def send_messages():
             break
 
 if __name__ == "__main__":
-    host = 'localhost'
-    port = 6789
+    running = True
+    s = ""
+    while True:
+        s = input("%connect [address] [port]: To connect to the server\n")
+        
+        if not s.startswith("%connect"):
+            print("invalid inputs")
+            continue
+        else:
+            break 
+    
+    s = s.split(" ")
+    host, port = s[1], int(s[2])
     client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     client.connect((host, port))
     
