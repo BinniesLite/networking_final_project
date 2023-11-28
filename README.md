@@ -4,6 +4,16 @@ The purpose of this project is to implement a fully fledged client-server applic
 The project is divided into two parts. You should start with Part 1 first. Then you can extend your code to implement Part 2. Despite the fact that each part can be implemented separately (i.e., as two separate projects), you must not separate the implementation of both parts. In other words, you must submit one common code that can allow both parts to work seamlessly as intended during the same process execution (for example, users should
 be able to switch between part 1 and part 2 without having to disconnect from the server).
 
+# Run Instructions (Windows)
+The current version of the message board is written entirely in Python. It can be tested with the following steps. Python should be installed on the computer and added to PATH before running.
+
+* Clone repository: `git clone https://github.com/BinniesLite/networking_final_project.git`
+* Change directories: `cd networking_final_project`
+* Make sure you are in the current branch: `git checkout develop`
+* Run server: `python server.py`
+* Open new terminal
+* Start a client: `python client.py`
+
 # Part 1: A Public Message Board
 Consider that all clients belong to one and only one public group. A client joins by connecting to a dedicated server (a standalone process) and is prompted to enter a non-existent user name in that group.
 
@@ -31,3 +41,4 @@ Extend Part 1 to allow users to join multiple private groups.
 * You are not required to implement any user authentication methods.
 * Additional credit of 5% will be given if you have the client program written in a language different from the one used for the server program.
 * Additional credit up to 5% may be given for a GUI implementation, based on its quality.
+#
