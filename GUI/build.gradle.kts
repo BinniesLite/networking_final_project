@@ -20,5 +20,5 @@ tasks.test {
     useJUnitPlatform()
 }
 application {
-    mainClass = "org.example.GUI"
+    mainClass = "org.example.client"
 }

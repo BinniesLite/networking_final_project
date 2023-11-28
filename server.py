@@ -208,8 +208,8 @@ def handle_client(client):
             
             # client.send(response)
         except Exception as e:
-            print(e)
-            print("There is something wrong")
+            # print(e)
+            print("Exception occurred in server: " + e)
             break
         
 def run_server():
