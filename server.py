@@ -34,7 +34,7 @@ def handle_client(client):
                     if msg != "":
                         temp.append(msg)
                 message = [command] + temp
-            # response = ""
+
             if command == '%join':
                 username = message[1]
 
@@ -49,6 +49,8 @@ def handle_client(client):
                     
                     user_list = "\n".join(usernames.values())
                     client.send(f"Users in the group:\n{user_list}\n".encode('utf-8'))
+            
+            # handle %connect command
             elif command == '%connect':
                 address_port = message[1:]
                 if len(address_port) == 2:
@@ -64,6 +66,7 @@ def handle_client(client):
                 else:
                     client.send('Invalid command format. Use "%connect [address] [port]\n".'.encode('utf-8'))
             
+            # handle %post command
             elif command == "%post":
                 
                 subject = message[1]
@@ -78,11 +81,13 @@ def handle_client(client):
                 full_message = f"Message ID: {len(messages) + 1}, Sender: {sender}, Post Date: {post_date}, Subject: {subject}, Content:{content}\n"
                 messages.append(full_message)
                 broadcast(full_message.encode('utf-8'))
-                
+            
+            # handle %users command
             elif command == '%users':
                 user_list = "\n".join(usernames.values())
                 client.send(f"Users in the group:\n{user_list}\n".encode('utf-8'))
                 
+            # handle %leave command
             elif command == '%leave':
                 if client in usernames:
                     username = usernames[client]
@@ -92,6 +97,7 @@ def handle_client(client):
                 clients.remove(client)
                 client.send("You left the chat room!\n".encode('utf-8'))
                 
+            # handle %message command
             elif command == '%message':
                 msg_id = int(message[1])
                 
@@ -99,7 +105,8 @@ def handle_client(client):
                     client.send(messages[msg_id - 1].encode('utf-8'))
                 else:
                     client.send("Invalid message ID.\n".encode('utf-8'))
-                
+            
+            # handle %exit command
             elif command == '%exit':
                 if username in usernames:
                     username = usernames[client]
@@ -111,11 +118,15 @@ def handle_client(client):
                 client.send("exit".encode("utf-8"))
                 client.close()
                 break
+
+            # handle %groups command
             elif command == "%groups":
-                response = f"Here're all the group available: \n {' '.join([str(i) for i in range(GROUPS)])}" 
+                response = f"Here are all the groups available: \n {' '.join([str(i) for i in range(GROUPS)])}" 
                 
                 client.send(response.encode("utf-8"))
-            elif command == "%groupsjoin":
+
+            # handle %groupjoin command
+            elif command == "%groupjoin":
                 if len(message) < 2:
                     client.send('Invalid command format. Try again!\n'.encode('utf-8'))
                     continue
@@ -136,6 +147,8 @@ def handle_client(client):
                     username = usernames[client]
                 
                 client.send(f"User {username} join group {group_id}".encode("utf-8"))
+
+            # handle %groupusers command
             elif command == "%groupusers":
                 if len(message) < 2:
                     client.send('Invalid command format. Try again!\n'.encode('utf-8'))
@@ -150,7 +163,9 @@ def handle_client(client):
                 for user in group_users[group_id]:
                     response.append(usernames[user])
                 content = "\n".join([res for res in response])
-                client.send(f"The user in {group_id} are: {content}".encode("utf-8"))
+                client.send(f"The users in group {group_id} are: {content}".encode("utf-8"))
+            
+            # handle %grouppost command
             elif command == "%grouppost":
 
                 if len(message) <= 2:
@@ -183,6 +198,8 @@ def handle_client(client):
                 group_messages[group_id] += [full_message]
                 
                 broadcast_group(full_message.encode('utf-8'), group_id)
+            
+            # handle %groupleave command
             elif command == "%groupleave":
                 group_id = int(message[1])
                 if client not in group_users[group_id]:
@@ -193,6 +210,8 @@ def handle_client(client):
                 
                 group_users[group_id].remove(client)
                 print(group_users[group_id])
+
+            # handle %groupmessage command
             elif command == "%groupmessage":
                 if len(message) <= 2:
                     client.send('Invalid command format. Try again!\n'.encode('utf-8'))
@@ -201,23 +220,21 @@ def handle_client(client):
                 group_id = int(message[1])
                 msg_id = int(message[2])
                 
-
                 if client not in group_users[group_id]:
-                    client.send(f"User is not allowed".encode('utf-8'))
+                    client.send(f"User is not authorized to access message".encode('utf-8'))
                     continue
                 
                 if 1 <= msg_id <= len(group_messages[group_id]):    
                     client.send(group_messages[group_id][msg_id - 1].encode('utf-8'))
                 else:
                     client.send("Invalid message ID.\n".encode('utf-8'))
-                
+            
+            # handle unknown command
             else:
                 client.send('Invalid command format. Try again!\n'.encode('utf-8'))
             
-            # client.send(response)
         except Exception as e:
-            # print(e)
-            print("Exception occurred in server: " + e)
+            print(f'Exception occurred in server: {e}')
             break
 
 # Function to handle SIGINT
@@ -248,6 +265,7 @@ def run_server():
 if __name__ == "__main__":
     host = 'localhost'
     port = 6789
+    # "server provides a list of 5 groups"
     GROUPS = 5
     
     server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -278,7 +296,7 @@ if __name__ == "__main__":
         ---------------------------------------------------------
         Available group commands:
         %groups: Show all groups availables
-        %groupsjoin [group ID]: Join the group with id
+        %groupjoin [group ID]: Join a group with ID 1-5
         %grouppost [group ID] [subject] [content]: Post to the group with that id
         %groupusers [group ID]: Retrieve a list of users in the given group
         %groupmessage [group ID] [message ID]: retrieve the content of an earlier post if you belong to that group
@@ -289,8 +307,4 @@ if __name__ == "__main__":
     signal.signal(signal.SIGINT, signal_handler)
 
     run_server()
-
-
-
-
 

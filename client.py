@@ -30,7 +30,7 @@ if __name__ == "__main__":
     running = True
     s = ""
     while True:
-        s = input("%connect [address] [port]: To connect to the server\n")
+        s = input("Use command '%connect [address] [port]' to connect to the server\n")
         
         if not s.startswith("%connect"):
             print("invalid inputs")
