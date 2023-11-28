@@ -28,11 +28,7 @@ public final class client {
             client newClient = new client();
             newClient.connect();
             newClient.init();
-            //newClient.clientGUI = new GUI();
-            //newClient.clientGUI.init();
-            //newClient.close();
-        }
-        catch (Exception e) {
+        } catch (Exception e) {
             System.out.println("Exception occurred in client main:" + e);
         }
     }
@@ -54,34 +50,32 @@ public final class client {
         }
     }
 
-    public void close() {
-        try {
-            controlSocket.close();
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
-        sendMsgThread.interrupt();
-        rcvMsgThread.interrupt();
-    }
-
     /* Connect to the server */
-    public void connect() {
-        try {
-            // establish the control socket
-            controlSocket = new Socket("localhost", 6789);
+public void connect() {
+    try {
+        controlSocket = new Socket("localhost", 6789);
+        controlReader = new BufferedReader(new InputStreamReader(controlSocket.getInputStream()));
+        controlWriter = new DataOutputStream(controlSocket.getOutputStream());
+    } catch (UnknownHostException ex) {
+        System.out.println("UnknownHostException during connection attempt: " + ex);
+        close();
+    } catch (IOException ex) {
+        System.out.println("IOException during connection attempt: " + ex);
+        close();
+    }
+}
 
-            // get references to the socket input and output streams
-            InputStreamReader isr = new InputStreamReader(controlSocket.getInputStream());
-            controlReader = new BufferedReader(isr);
-            controlWriter = new DataOutputStream(controlSocket.getOutputStream());
-        } 
-        catch (UnknownHostException ex) {
-            System.out.println("UnknownHostException during connection attempt: " + ex);
-        } 
-        catch (IOException ex) {
-            System.out.println("IOException during connection attempt: " + ex);
-        }
-    } /* end client.connect() */
+public void close() {
+    try {
+        if (controlSocket != null) controlSocket.close();
+        if (controlReader != null) controlReader.close();
+        if (controlWriter != null) controlWriter.close();
+    } catch (IOException e) {
+        System.err.println("Error closing resources: " + e.getMessage());
+    }
+    if (sendMsgThread != null) sendMsgThread.interrupt();
+    if (rcvMsgThread != null) rcvMsgThread.interrupt();
+}
 
     final class TcpSend implements Runnable {
         Socket socket;  // reference to connection socket
@@ -116,6 +110,10 @@ public final class client {
                         System.out.println("exiting client program");
                         break;
                     }
+                    response = controlReader.readLine();
+                     if (response != null) {
+                   System.out.println(response);
+                }
                 }
                 catch (IOException ex) {
                     System.out.println("IOException occured during send message attempt: " + ex);
