@@ -1,15 +1,17 @@
 import socket
 import threading
 
+# client receive messages function
 def receive_messages():
     while True:
         try:
             message = client.recv(1024).decode('utf-8')
             print(message)
         except Exception as e:
-            print(f'An error occurred: {e}')
+            print(f'An error occurred in client receive: {e}')
             break
 
+# client send messages function
 def send_messages():
     while True:
         try:

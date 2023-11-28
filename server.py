@@ -2,14 +2,17 @@ import socket
 import threading
 import time
 
+# send the given message to all current clients
 def broadcast(message):
     for client in clients:
         client.send(message)
 
+# send the given message to all current clients in the given group
 def broadcast_group(message, group_id):
     for client in group_users[group_id]:
         client.send(message)
     
+# handle client commands
 def handle_client(client):
     while True:
         try:
@@ -23,13 +26,14 @@ def handle_client(client):
             
                 temp = []
 
-                # Handle empty string
+                # handle empty string
                 message = message.split(' ')
                 for msg in message[1:]:
                     if msg != "":
                         temp.append(msg)
                 message = [command] + temp
-            # response = ""
+
+            #handle %join command
             if command == '%join':
                 username = message[1]
 
@@ -44,6 +48,8 @@ def handle_client(client):
                     
                     user_list = "\n".join(usernames.values())
                     client.send(f"Users in the group:\n{user_list}\n".encode('utf-8'))
+
+            #handle %connect command
             elif command == '%connect':
                 address_port = message[1:]
                 if len(address_port) == 2:
@@ -59,6 +65,7 @@ def handle_client(client):
                 else:
                     client.send('Invalid command format. Use "%connect [address] [port]\n".'.encode('utf-8'))
             
+            # handle %post command
             elif command == "%post":
                 subject = message[1]
                 content = " ".join(message[2:])
@@ -73,10 +80,12 @@ def handle_client(client):
                 messages.append(full_message)
                 broadcast(full_message.encode('utf-8'))
                 
+            # handle %users command
             elif command == '%users':
                 user_list = "\n".join(usernames.values())
                 client.send(f"Users in the group:\n{user_list}\n".encode('utf-8'))
                 
+            #handle %leave command
             elif command == '%leave':
                 username = usernames[client]
                 del usernames[client]
@@ -84,6 +93,8 @@ def handle_client(client):
                 broadcast(f'{username} has left the chat room!\n'.encode('utf-8'))
                 client.send("You left the chat room!\n".encode('utf-8'))
                 client.close()
+
+            # handle %message command
             elif command == '%message':
                 msg_id = int(message[1])
                 
@@ -92,6 +103,7 @@ def handle_client(client):
                 else:
                     client.send("Invalid message ID.\n".encode('utf-8'))
                 
+            # handle %exit command
             elif command == '%exit':
                 if username in usernames:
                     username = usernames[client]
@@ -100,12 +112,15 @@ def handle_client(client):
                     del usernames[client]
                 
                 client.send("You are disconnected from the server!\n".encode('utf-8'))
-                client.send("exit".encode("utf-8"))
+                client.send("Exit".encode("utf-8"))
                 client.close()
+
+            # handle %groups command
             elif command == "%groups":
-                response = f"Here're all the group available: \n {' '.join([str(i) for i in range(GROUPS)])}" 
-                
+                response = f"Here are all the groups available: \n {' '.join([str(i) for i in range(GROUPS)])}"       
                 client.send(response.encode("utf-8"))
+
+            # handle %groupjoin command
             elif command == "%groupjoin":
                 if len(message) < 2:
                     client.send('Invalid command format. Try again!\n'.encode('utf-8'))
@@ -126,8 +141,9 @@ def handle_client(client):
                 if client in usernames:
                     username = usernames[client]
                 
-                
                 client.send(f"User {username} join group {group_id}".encode("utf-8"))
+
+            # handle %groupusers command
             elif command == "%groupusers":
                 if len(message) < 2:
                     client.send('Invalid command format. Try again!\n'.encode('utf-8'))
@@ -143,6 +159,8 @@ def handle_client(client):
                     response.append(usernames[user])
                 content = "\n".join([res for res in response])
                 client.send(f"The user in {group_id} are: {content}".encode("utf-8"))
+
+            # handle %grouppost command
             elif command == "%grouppost":
 
                 if len(message) <= 2:
@@ -175,6 +193,8 @@ def handle_client(client):
                 group_messages[group_id] += [full_message]
                 
                 broadcast_group(full_message.encode('utf-8'), group_id)
+
+            # handle %groupleave command
             elif command == "%groupleave":
                 group_id = int(message[1])
                 if client not in group_users[group_id]:
@@ -185,6 +205,8 @@ def handle_client(client):
                 
                 group_users[group_id].remove(client)
                 print(group_users[group_id])
+
+            # handle %groupmessage command
             elif command == "%groupmessage":
                 if len(message) <= 2:
                     client.send('Invalid command format. Try again!\n'.encode('utf-8'))
@@ -193,7 +215,6 @@ def handle_client(client):
                 group_id = int(message[1])
                 msg_id = int(message[2])
                 
-
                 if client not in group_users[group_id]:
                     client.send(f"User is not allowed".encode('utf-8'))
                     continue
@@ -203,15 +224,15 @@ def handle_client(client):
                 else:
                     client.send("Invalid message ID.\n".encode('utf-8'))
                 
+            # handle unknown command
             else:
                 client.send('Invalid command format. Try again!\n'.encode('utf-8'))
             
-            # client.send(response)
         except Exception as e:
-            # print(e)
-            print("Exception occurred in server: " + e)
+            print(f'Exception occurred in server: {e}')
             break
-        
+
+# run server
 def run_server():
     print("Server started. Waiting for connections...")
     while True:
@@ -219,21 +240,21 @@ def run_server():
         clients.append(client)
         print(f'Connection established with {address}')
         client.send("""Welcome to the chat room!
-        Available commands:
+        Available global commands:
         %connect [address] [port]: Connect to a different server
         %join [username]: Join with the username
-        %post [subject] [content]: Post a message
+        %post [subject] [content]: Post a message to the board
         %users: Get the list of users in the group
-        %message [message ID]: Retrieve the content of a message
+        %message [message ID]: Retrieve the contents of a message
         %leave: Leave the group
         %exit: Exit the client program
         ---------------------------------------------------------
         Available group commands:
-        %groups: Show all groups availables
-        %groupsjoin [group ID]: Join the group with id
-        %grouppost [group ID] [subject] [content]: Post to the group with that id
+        %groups: Show all groups available
+        %groupjoin [group ID]: Join the given group
+        %grouppost [group ID] [subject] [content]: Post to the given group
         %groupusers [group ID]: Retrieve a list of users in the given group
-        %groupmessage [group ID] [message ID]: retrieve the content of an earlier post if you belong to that group
+        %groupmessage [group ID] [message ID]: Retrieve the content of an earlier post if you belong to that group
         %groupleave [group ID]: Leave the current group if client is in that group
         """.encode('utf-8'))
 
@@ -248,7 +269,6 @@ if __name__ == "__main__":
     server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     server.bind((host, port))
     server.listen()
-    
     
     clients: list[type(socket)] = []
     usernames = {} # client -> username
