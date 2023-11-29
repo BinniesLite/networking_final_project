@@ -18,6 +18,9 @@ def handle_client(client):
     global running
     while running:
         try:
+            global username
+            username = ""
+
             message = client.recv(1024).decode('utf-8')
             if message:
                 # remove everything before the % character
@@ -107,12 +110,14 @@ def handle_client(client):
             
             # handle %exit command
             elif command == '%exit':
+                if username is False:
+                    username = ""
+
                 if username in usernames:
                     username = usernames[client]
-                
                     client.send(f'{username} has left the chat room!\n'.encode('utf-8'))
+                    broadcast(f'{username} has left the chat room!\n'.encode('utf-8')) #added
                     del usernames[client]
-                
                 client.send("You are disconnected from the server!\n".encode('utf-8'))
                 client.send("exit".encode("utf-8"))
                 client.close()
@@ -126,6 +131,11 @@ def handle_client(client):
 
             # handle %groupjoin command
             elif command == "%groupjoin":
+                # check if user enters arguments that are non-numbers
+                if (message[1].isnumeric()) is False:
+                    client.send('Invalid command format. Try again!\n'.encode('utf-8'))
+                    continue  
+                # check if message length is not valid
                 if len(message) < 2:
                     client.send('Invalid command format. Try again!\n'.encode('utf-8'))
                     continue
@@ -145,7 +155,8 @@ def handle_client(client):
                 if client in usernames:
                     username = usernames[client]
                 
-                client.send(f"User {username} joined group {group_id}".encode("utf-8"))
+                client.send(f"User {username} joined group {group_id}\n".encode("utf-8"))
+                broadcast_group(f"User {username} joined group {group_id}\n".encode("utf-8"), group_id)
 
             # handle %groupusers command
             elif command == "%groupusers":
@@ -162,7 +173,7 @@ def handle_client(client):
                 for user in group_users[group_id]:
                     response.append(usernames[user])
                 content = "\n".join([res for res in response])
-                client.send(f"The users in group {group_id} are: {content}".encode("utf-8"))
+                client.send(f"The users in group {group_id} are: {content}\n".encode("utf-8"))
             
             # handle %grouppost command
             elif command == "%grouppost":
@@ -200,18 +211,29 @@ def handle_client(client):
             
             # handle %groupleave command
             elif command == "%groupleave":
+                # check if user enters arguments that are non-numbers
+                if (message[1].isnumeric()) is False:
+                    client.send('Invalid command format. Try again!\n'.encode('utf-8'))
+                    continue  
+
                 group_id = int(message[1])
-                if client not in group_users[group_id]:
-                    client.send("You don't have permission to post in this group".encode("utf-8"))
-                    continue
                 
-                client.send(f"{usernames[client]} leave group {group_id}".encode("utf-8"))
+                if client not in group_users[group_id]:
+                    client.send("You don't have permission to post in this group.\n".encode("utf-8"))
+                    continue
+                broadcast_group(f"{usernames[client]} left group {group_id}".encode("utf-8"), group_id) #added
+                # client.send(f"{usernames[client]} left group {group_id}".encode("utf-8"))
                 
                 group_users[group_id].remove(client)
                 print(group_users[group_id])
 
             # handle %groupmessage command
             elif command == "%groupmessage":
+                # check if user enters arguments that are non-numbers
+                if (message[1].isnumeric()) is False:
+                    client.send('Invalid command format. Try again!\n'.encode('utf-8'))
+                    continue  
+            
                 if len(message) <= 2:
                     client.send('Invalid command format. Try again!\n'.encode('utf-8'))
                     continue  
@@ -220,7 +242,7 @@ def handle_client(client):
                 msg_id = int(message[2])
                 
                 if client not in group_users[group_id]:
-                    client.send(f"User is not authorized to access message".encode('utf-8'))
+                    client.send(f"User is not authorized to access message\n".encode('utf-8'))
                     continue
                 
                 if 1 <= msg_id <= len(group_messages[group_id]):    
@@ -235,6 +257,7 @@ def handle_client(client):
         except Exception as e:
             print(f'Exception occurred in server: {e}')
             break
+# end handle_client
 
 # Function to handle SIGINT
 def signal_handler(sig, frame):
