@@ -9,7 +9,7 @@ The current version of the message board is written entirely in Python. It can b
 
 * Clone repository: `git clone https://github.com/BinniesLite/networking_final_project.git`
 * Change directories: `cd networking_final_project`
-* Make sure you are in the current branch: `git checkout develop`
+* Make sure you are in the current branch: `git checkout main`
 * Run server: `python server.py`
 * Open new terminal
 * Start a client: `python client.py`
