@@ -15,9 +15,11 @@ def broadcast_group(message, group_id):
         client.send(message)
     
 def handle_client(client):
-    global running
+    running = True
     while running:
         try:
+            if not client:
+                break
             global username
             username = ""
 
@@ -39,6 +41,9 @@ def handle_client(client):
                 message = [command] + temp
 
             if command == '%join':
+                if len(message) < 2:
+                    client.send("Invalid message \n".encode("utf-8"))
+                    continue
                 username = message[1]
 
                 if username in usernames.values():
@@ -97,7 +102,6 @@ def handle_client(client):
                     
                     broadcast(f'{username} has left the chat room!\n'.encode('utf-8'))
                     del usernames[client]
-                clients.remove(client)
                 client.send("You left the chat room!\n".encode('utf-8'))
                 
             # handle %message command
@@ -111,19 +115,19 @@ def handle_client(client):
             
             # handle %exit command
             elif command == '%exit':
-                if username is False:
-                    username = ""
-
-                if username in usernames:
+                # if username is False:
+                #     username = ""
+                
+                current_user = usernames[client]
+                if current_user in usernames:
                     username = usernames[client]
                     client.send(f'{username} has left the chat room!\n'.encode('utf-8'))
                     broadcast(f'{username} has left the chat room!\n'.encode('utf-8')) #added
                     del usernames[client]
                 client.send("You are disconnected from the server!\n".encode('utf-8'))
                 client.send("exit".encode("utf-8"))
-                client.close()
-                break
-
+                running = False
+            
             # handle %groups command
             elif command == "%groups":
                 response = f"Here are all the groups available: \n {' '.join([str(i) for i in range(GROUPS)])}" 
@@ -253,34 +257,41 @@ def handle_client(client):
                 client.send('Invalid command format. Try again!\n'.encode('utf-8'))
             
         except Exception as e:
-            print(f'Exception occurred in server: {e}')
-            break
+            print(f'Exception occurred in client: {e}')
+            if client:
+                client.close()
+            client = None
+            
+        finally:
+            if client:
+                client.close()
+            client = None
+            print(f'Connection with client closed.')
+    if client:
+        client.close()
+    client = None
 # end handle_client
 
-# Function to handle SIGINT
-def signal_handler(sig, frame):
-    global running
-    print("\nServer is shutting down...")
-    running = False
-    server.close()
-    for client in clients:
-        client.close()
-    print("Server shutdown complete.")
+
 
 def run_server():
-    global running
+    server_running = True
     print("Server started. Waiting for connections...")
-    while running:
+    while server_running:
         try:
             client, address = server.accept()
             clients.append(client)
             print(f'Connection established with {address}')
             client.send(welcome_message.encode('utf-8'))
+            
             thread = threading.Thread(target=handle_client, args=(client,))
             thread.start()
         except OSError:
+            server_running = False
             # This exception will be raised when the server socket is closed
             break
+        finally:
+            return
 
 if __name__ == "__main__":
     host = 'localhost'
@@ -323,8 +334,6 @@ if __name__ == "__main__":
         %groupleave [group ID]: Leave the current group if client is in that group
         """
 
-    # Register the signal handler
-    signal.signal(signal.SIGINT, signal_handler)
 
     run_server()
 
