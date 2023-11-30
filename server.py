@@ -17,7 +17,7 @@ def broadcast_group(message, group_id):
 def handle_client(client):
     running = True
     while running:
-        try:
+      
             if not client:
                 break
             global username
@@ -118,15 +118,20 @@ def handle_client(client):
                 # if username is False:
                 #     username = ""
                 
-                current_user = usernames[client]
-                if current_user in usernames:
+                if client in usernames:
                     username = usernames[client]
                     client.send(f'{username} has left the chat room!\n'.encode('utf-8'))
                     broadcast(f'{username} has left the chat room!\n'.encode('utf-8')) #added
                     del usernames[client]
+                
                 client.send("You are disconnected from the server!\n".encode('utf-8'))
                 client.send("exit".encode("utf-8"))
+                if client:
+                    client.close()
+                    client = None
                 running = False
+                break
+                
             
             # handle %groups command
             elif command == "%groups":
@@ -136,14 +141,14 @@ def handle_client(client):
 
             # handle %groupjoin command
             elif command == "%groupjoin":
+                if len(message) < 2:
+                    client.send('Invalid command format. Try again!\n'.encode('utf-8'))
+                    continue
                 # check if user enters arguments that are non-numbers
                 if (message[1].isnumeric()) is False:
                     client.send('Invalid command format. Try again!\n'.encode('utf-8'))
                     continue  
-                # check if message length is not valid
-                if len(message) < 2:
-                    client.send('Invalid command format. Try again!\n'.encode('utf-8'))
-                    continue
+               
                 group_id = int(message[1])
                 
                 if not (0 <= group_id <= GROUPS): 
@@ -256,20 +261,10 @@ def handle_client(client):
             else:
                 client.send('Invalid command format. Try again!\n'.encode('utf-8'))
             
-        except Exception as e:
-            print(f'Exception occurred in client: {e}')
-            if client:
-                client.close()
-            client = None
-            
-        finally:
-            if client:
-                client.close()
-            client = None
-            print(f'Connection with client closed.')
+     
     if client:
         client.close()
-    client = None
+        client = None
 # end handle_client
 
 
@@ -286,12 +281,11 @@ def run_server():
             
             thread = threading.Thread(target=handle_client, args=(client,))
             thread.start()
-        except OSError:
+        except Exception:
+            print("something wrong here ")
             server_running = False
             # This exception will be raised when the server socket is closed
             break
-        finally:
-            return
 
 if __name__ == "__main__":
     host = 'localhost'
