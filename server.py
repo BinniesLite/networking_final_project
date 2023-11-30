@@ -7,7 +7,7 @@ import signal
 running = True
 
 def broadcast(message):
-    for client in clients:
+    for client, _ in usernames.items():
         client.send(message)
 
 def broadcast_group(message, group_id):
@@ -46,6 +46,7 @@ def handle_client(client):
                 else:
                     usernames[client] = username
                     broadcast(f'{username} has joined the chat room!\n'.encode('utf-8'))
+                    
                     
                     for msg in messages[-2:]:
                         client.send(msg.encode('utf-8'))
@@ -154,8 +155,7 @@ def handle_client(client):
                 username = "Jane"
                 if client in usernames:
                     username = usernames[client]
-                
-                client.send(f"User {username} joined group {group_id}\n".encode("utf-8"))
+
                 broadcast_group(f"User {username} joined group {group_id}\n".encode("utf-8"), group_id)
 
             # handle %groupusers command
@@ -225,8 +225,6 @@ def handle_client(client):
                 # client.send(f"{usernames[client]} left group {group_id}".encode("utf-8"))
                 
                 group_users[group_id].remove(client)
-                print(group_users[group_id])
-
             # handle %groupmessage command
             elif command == "%groupmessage":
                 # check if user enters arguments that are non-numbers
